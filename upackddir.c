@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.23 2003/12/02 07:44:14 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.24 2003/12/02 18:44:34 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -178,10 +178,10 @@ int extract_file(FILE *f, packedfile_t *info)
 int extract_pack(char *packfile, int mode)
 {
 	packheader_t header;
-	int i, numpackfiles;
+	int i, n, numpackfiles;
 	FILE *packhandle;
 	packedfile_t *mapped;
-	long ps; int s;
+	long ps;
 
 	packhandle = fopen(packfile, "rb");
 	if (!packhandle) {
@@ -222,7 +222,7 @@ int extract_pack(char *packfile, int mode)
 		++mapped;
 	}
 
-	printf("Packfile extracted %s (%i files)\n", packfile, numpackfiles);
+	printf("Packfile %s (%i files)\n", packfile, numpackfiles);
 
 	return 1;
 }
@@ -401,7 +401,11 @@ static int create_pack(char *name, char *files[])
 		int r;
 
 		r = stat(files[i], &buf);
-		if (r == -1) return 0;
+		if (r == -1) {
+			fprintf(stderr, "Failed to stat() `%s': %s.\n",
+					files[i], strerror(errno));
+			return 0;
+		}
 
 		if ((buf.st_dev == fdev) && (buf.st_ino == finode)) {
 			fprintf(stderr, "Skipping the output archive `%s'.\n",
