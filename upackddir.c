@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.26 2003/12/02 19:53:38 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.27 2003/12/02 19:55:40 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -370,7 +370,7 @@ static int create_pack(char *name, char *files[])
 			LOGF("`%s' exists. Overwrite (N/y)? ", name);
 			c = getchar();
 			if (c != 'y') {
-				LOGF("OK, exiting.\n");
+				LOG("OK, exiting.\n");
 				exit(EXIT_FAILURE);
 
 			} else LOGF("Overwriting `%s' as requested.\n", name);
@@ -527,8 +527,8 @@ main (int argc, char *argv[])
 			case '?':
 				return EXIT_FAILURE;
 			default:
-				LOGF("W: getopt_long() returned an "
-				     "impossible value.\n");
+				LOG("W: getopt_long() returned an "
+				    "impossible value.\n");
 				return EXIT_FAILURE;
 		}
 	}
@@ -536,8 +536,8 @@ main (int argc, char *argv[])
 		extract = 1;
 
 	if (file && extract) {
-		LOGF("W: Ignoring -f. Use it only when creating "
-		     "a new archive.\n");
+		LOG("W: Ignoring -f. Use it only when creating "
+		    "a new archive.\n");
 	}
 
 	if (create && (list || extract))
@@ -546,7 +546,7 @@ main (int argc, char *argv[])
 	if (argv[optind] != NULL) {
 		if (create) {
 			ret = create_pack(file, argv + optind);
-			if (!ret) LOGF("Can't create pack file.\n");
+			if (!ret) LOG("Can't create pack file.\n");
 		}
 
 		if (list || extract)
