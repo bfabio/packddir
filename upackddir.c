@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.27 2003/12/02 19:55:40 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.28 2003/12/02 19:56:14 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -552,7 +552,7 @@ main (int argc, char *argv[])
 		if (list || extract)
 			ret = extract_pack(argv[optind], extract);
 	} else {
-		LOGF("Argument expected.\n");
+		LOG("Argument expected.\n");
 		usage_display();
 	}
 
