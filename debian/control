@@ -8,7 +8,7 @@ Standards-Version: 3.5.8
 Package: upackddir
 Architecture: i386
 Depends: ${shlibs:Depends} ${misc:Depends}
-Description: Extracts and create PackdDir files.
+Description: Extracts and creates PackdDir files
  This program can extract and create PackdDir archives used in Quake 2.
  .
  PackdDir files are used in other proprietary games as well.
