@@ -15,7 +15,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA */
 
-/*  $Id: log.h,v 1.1 2003/12/02 19:46:23 fabiob Exp $ */
+/*  $Id: log.h,v 1.2 2003/12/02 19:53:05 fabiob Exp $ */
 
 #ifndef _LOG_H
 #define _LOG_H
@@ -30,8 +30,8 @@
 #define DEFAULT_LOGLEVEL LOG_NORMAL
 
 
-#define LOGF(l, x, ...) \
-	do { if ((l) >= DEFAULT_LOGLEVEL) \
+#define LOGF(x, ...) \
+	do { /* if ((l) >= DEFAULT_LOGLEVEL) */ \
 		fprintf(stderr, "upackddir: " x , __VA_ARGS__); \
 	} \
 	while (0)
