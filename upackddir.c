@@ -18,10 +18,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
-/*  $Id: upackddir.c,v 1.3 2003/06/18 22:28:04 fabiob Exp $ */
 
+/*  $Id: upackddir.c,v 1.4 2003/06/18 22:38:25 fabiob Exp $ */
+
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <unistd.h>
 
@@ -60,11 +64,12 @@ typedef struct {
 	int filepos, filelen;
 } dpackfile_t;
 
+int makepath(const char *path);
+
 int _makepath(const char *path)
 {
 	int len;
 	char *p;
-	char parentdir[MAX_FILENAMELEN];
 	char dir[MAX_FILENAMELEN];
 
 	/* Skip initial slashes */
@@ -164,7 +169,6 @@ pack_t *extract_pack(char *packfile, int mode)
 	pack_t *pack;
 	FILE *packhandle, *ph;
 	dpackfile_t info[MAX_FILES_IN_PACK];
-	unsigned checksum;
 
 	packhandle = fopen(packfile, "rb");
 	if (!packhandle)
