@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.30 2003/12/02 20:58:30 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.31 2003/12/02 21:09:09 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -63,14 +63,6 @@ typedef struct {
 	char name[56];
 	int filepos, filelen;
 } packedfile_t;
-
-/* PackdDir file */
-typedef struct {
-	char filename[MAX_OSPATH];
-	FILE *handle;
-	int numfiles;
-	packedfile_t *files;
-} pack_t;
 
 int makepath(const char *path);
 
