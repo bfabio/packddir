@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.6 2003/06/19 19:46:12 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.7 2003/07/12 17:40:38 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -38,31 +38,31 @@
 #define MAX_QPATH 64
 #define MAX_OSPATH 128
 #define MAX_FILENAMELEN 128
-#define MAX_FILES_IN_PACK 4096
+#define MAX_FILES_IN_PACK 8192 
 #define IDPAKHEADER (('K'<<24) + ('C'<<16) + ('A'<<8) + 'P')
 
+#define DEBUG
+
+/* PackdDir file header */
 typedef struct {
 	int ident;	/* IDPAKHEADER */
 	int dirofs;
 	int dirlen;
-} dpackheader_t;
+} packheader_t;
 
+/* Packed file */
 typedef struct {
-	char name[MAX_QPATH];
+	char name[56];
 	int filepos, filelen;
-} packfile_t;
+} packedfile_t;
 
+/* PackdDir file */
 typedef struct pack_s {
 	char filename[MAX_OSPATH];
 	FILE *handle;
 	int numfiles;
-	packfile_t *files;
+	packedfile_t *files;
 } pack_t;
-
-typedef struct {
-	char name[56];
-	int filepos, filelen;
-} dpackfile_t;
 
 int makepath(const char *path);
 
@@ -114,7 +114,7 @@ int makepath(const char *path)
 	return ret;
 }
 
-int extract_file(FILE *f, dpackfile_t *info)
+int extract_file(FILE *f, packedfile_t *info)
 {
 	FILE *out;
 	char buf[BUFSIZ];
@@ -158,64 +158,53 @@ int extract_file(FILE *f, dpackfile_t *info)
  *	  0 just print filenames
  *	  1 actually extract files
  *
- * returns: pack_t on success,
- *	    NULL on failure */
-pack_t *extract_pack(char *packfile, int mode)
+ * returns: 1 on success,
+ *	    0 on failure */
+int extract_pack(char *packfile, int mode)
 {
-	dpackheader_t header;
-	int i;
-	packfile_t *newfiles;
-	int numpackfiles;
-	pack_t *pack;
+	packheader_t header;
+	int i, numpackfiles;
 	FILE *packhandle, *ph;
-	dpackfile_t info[MAX_FILES_IN_PACK];
+	packedfile_t files[MAX_FILES_IN_PACK];
 
 	packhandle = fopen(packfile, "rb");
-	if (!packhandle)
-		return NULL;
+	if (!packhandle) {
+		fprintf(stderr, "Error extracting `%s': %s\n",
+				 packfile, strerror(errno));
+
+		return 0;
+	}
 
 	fread(&header, 1, sizeof (header), packhandle);
+	
+	if (header.ident != IDPAKHEADER) {
+		fprintf(stderr, "%s is not a packfile.\n", packfile);
+		return 0;
+	}
 
-	if (header.ident != IDPAKHEADER)
-		fprintf(stderr, "%s is not a packfile", packfile);
+	numpackfiles = header.dirlen / sizeof (packedfile_t);
 
-	header.dirofs = header.dirofs;
-	header.dirlen = header.dirlen;
-
-	numpackfiles = header.dirlen / sizeof (dpackfile_t);
-
-	if (numpackfiles > MAX_FILES_IN_PACK)
+	if (numpackfiles > MAX_FILES_IN_PACK) {
 		fprintf(stderr, "%s has %i files, max is %i\n",
 				packfile, numpackfiles, MAX_FILES_IN_PACK);
-
-	newfiles = malloc(numpackfiles * sizeof (packfile_t));
+		exit(EXIT_FAILURE);
+	}
 
 	fseek(packhandle, header.dirofs, SEEK_SET);
-	fread(info, 1, header.dirlen, packhandle);
+	fread(files, 1, header.dirlen, packhandle);
 
 	ph = fopen (packfile, "rb");
 
 	/* Parse the directory */
 	for (i = 0; i < numpackfiles; i++) {
 
-		fprintf(stderr, "%s\n", info[i].name);
-		if (mode) extract_file(ph, &info[i]);
-
-		strcpy(newfiles[i].name, info[i].name);
-		newfiles[i].filepos = info[i].filepos;
-		newfiles[i].filelen = info[i].filelen;
-
+		fprintf(stderr, "%s\n", files[i].name);
+		if (mode) extract_file(ph, &files[i]);
 	}
-
-	pack = malloc(sizeof (pack_t));
-	strcpy(pack->filename, packfile);
-	pack->handle = packhandle;
-	pack->numfiles = numpackfiles;
-	pack->files = newfiles;
 
 	printf ("Packfile %s (%i files)\n", packfile, numpackfiles);
 
-	return pack;
+	return 1;
 }
 
 static void help_display()
@@ -223,8 +212,9 @@ static void help_display()
 	printf("Usage: upackddir FILENAME\n"
 	       "Extracts PackdDir archives.\n\n"
 	       "Options:\n"
-	       "  --help\t\tThis help\n"
-	       "  --version\t\tDisplay version information\n");
+	       "  -h, --help\t\tThis help.\n"
+	       "  -t, --list\t\tList contents.\n"
+	       "  --version\t\tDisplay version information.\n");
 	exit(EXIT_SUCCESS);
 }
 
@@ -240,7 +230,7 @@ static void version_display()
 int
 main (int argc, char *argv[])
 {
-	int extract = 1;
+	int ret = 0, extract = 1;
 
 	char c;
 	int index;
@@ -252,7 +242,7 @@ main (int argc, char *argv[])
 	};
 
 	if (argc < 2) {
-		fprintf (stderr, "Usage: upackddir FILENAME\n"
+		fprintf (stderr, "Usage: upackddir [OPTIONS] FILENAME\n"
 				 "Try `upackddir --help' for "
 				 "more informations.\n");
 		return EXIT_FAILURE;
@@ -278,8 +268,15 @@ main (int argc, char *argv[])
 		}
 	}
 
-	extract_pack(argv[optind], extract);
+	if (argv[optind] != NULL)
+		ret = extract_pack(argv[optind], extract);
+	else {
+		fprintf(stderr, "Filename expected.\n"
+				"Usage: upackddir [OPTIONS] FILENAME\n"
+				"Try `upackddir --help' for "
+				"more informations.\n");
+	}
 
-	return EXIT_SUCCESS;
+	return (ret) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 /* vim set ai ts=8 */
