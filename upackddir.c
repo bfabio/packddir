@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.28 2003/12/02 19:56:14 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.29 2003/12/02 19:58:46 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -221,7 +221,7 @@ int extract_pack(char *packfile, int mode)
 	(char *) mapped += n;
 
 	for (i = 0; i < numpackfiles; i++) {
-		LOGF("%s\n", mapped->name);
+		fprintf(stderr, "%s\n", mapped->name);
 		if (mode) extract_file(packhandle, mapped);
 		++mapped;
 	}
