@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.19 2003/11/11 19:42:29 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.20 2003/11/11 19:46:51 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -39,7 +39,6 @@
 
 #define PACKDDIR_VERSION "0.0.5"
 
-#define MAX_QPATH 64
 #define MAX_OSPATH 128
 #define MAX_FILENAMELEN 128
 #define MAX_FILES_IN_PACK 8192
