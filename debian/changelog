@@ -1,3 +1,11 @@
+upackddir (0.0.6) unstable; urgency=low
+
+  * New upstream release.
+    - Remove the limit of files contained in the archive.
+    - Can unpack specific files from the archive.
+
+ -- Fabio Bonelli <fabiobonelli@libero.it>  Wed,  3 Dec 2003 00:15:26 +0100
+
 upackddir (0.0.5-1) unstable; urgency=low
 
   * New upstream release.
