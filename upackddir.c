@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.8 2003/07/12 17:42:51 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.9 2003/07/13 18:43:03 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -32,6 +32,8 @@
 /* Needed for getopt_long() */
 #define __GNU_SOURCE
 #include <getopt.h>
+
+#include "lists.h"
 
 #define PACKDDIR_VERSION "0.0.2"
 
@@ -114,6 +116,13 @@ int makepath(const char *path)
 	return ret;
 }
 
+/* Extracts the file described by the packedfile_t entry 
+ * from the given stream. 
+ * @f:    file stream associated with the PackdDir file 
+ * @info: file entry 
+ *
+ * returns: 1 on success
+ *          0 on failure */
 int extract_file(FILE *f, packedfile_t *info)
 {
 	FILE *out;
@@ -230,13 +239,16 @@ static void version_display()
 int
 main (int argc, char *argv[])
 {
-	int ret = 0, extract = 1;
-
+	int ret = 0,
+	    extract = 1,
+	    create = 0;
 	char c;
 	int index;
+
 	struct option long_opts[] = {
 		{ "help", 0, 0, 'h' },
 		{ "version", 0, 0, 0 },
+		{ "create", 0, 0, 'c'},
 		{ "list", 0, 0, 't' },
 		{ NULL, 0, 0, 0}
 	};
@@ -252,6 +264,9 @@ main (int argc, char *argv[])
 		switch (c) {
 			case 'h':
 				help_display();
+				break;
+			case 'c':
+				create = 1;
 				break;
 			case 0:
 				version_display();

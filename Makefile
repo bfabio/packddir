@@ -1,10 +1,19 @@
 CC=gcc
-CCFLAGS=-O2
+CCFLAGS=-g -O2 -Wall
+OBJS=lists.o upackddir.o
+DESTDIR=/
 
-all:
-	$(CC) $(CCFLAGS) -Wall -o upackddir upackddir.c
+all: $(OBJS)
+	$(CC) $(CCFLAGS) -o upackddir $(OBJS)
+
+upackddir.o:
+	$(CC) $(CCFLAGS) --std=c99 -c upackddir.c
+
+.c.o:
+	$(CC) $(CCFLAGS) -c -o $*.o $<
+
 clean:
-	rm -f upackddir
+	rm -f upackddir $(OBJS)
 
 install:
-	mv upackddir /usr/bin/upackddir
+	install -m 755 upackddir $(DESTDIR)/usr/bin/upackddir
