@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.25 2003/12/02 19:29:22 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.26 2003/12/02 19:53:38 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -40,6 +40,7 @@
 #include <getopt.h>
 
 #include "lists.h"
+#include "log.h"
 #include "utils.h"
 
 #define PACKDDIR_VERSION "0.0.5"
@@ -90,7 +91,7 @@ int _makepath(const char *path)
 
 	len = p - path;
 	if (len >= MAX_FILENAMELEN) {
-		fprintf(stderr, "Directory name '%s` too long\n", path);
+		LOGF("Directory name '%s` too long\n", path);
 		return 0;
 	}
 
@@ -100,7 +101,7 @@ int _makepath(const char *path)
 	if (mkdir(dir, 0777) == -1) {
 		if (errno == EEXIST) goto cont;
 
-		fprintf(stderr, "%s: ", dir);
+		LOGF("%s: ", dir);
 		perror("mkdir");
 		return 0;
 	}
@@ -139,8 +140,8 @@ int extract_file(FILE *f, packedfile_t *info)
 
 	out = fopen(info->name, "w");
 	if (!out) {
-		fprintf(stderr, "Can't open file `%s' for write: %s.\n",
-				info->name, strerror(errno));
+		LOGF("Can't open file `%s' for write: %s.\n",
+		     info->name, strerror(errno));
 		return 0;
 	}
 
@@ -188,8 +189,8 @@ int extract_pack(char *packfile, int mode)
 	else packhandle = fopen(packfile, "rb");
 
 	if (!packhandle) {
-		fprintf(stderr, "Error extracting `%s': %s\n",
-				 packfile, strerror(errno));
+		LOGF("Error extracting `%s': %s\n",
+		     packfile, strerror(errno));
 
 		return 0;
 	}
@@ -197,7 +198,7 @@ int extract_pack(char *packfile, int mode)
 	fread(&header, 1, sizeof (header), packhandle);
 
 	if (endian_big_to_host(header.ident) != IDPAKHEADER) {
-		fprintf(stderr, "%s is not a packfile.\n", packfile);
+		LOGF("%s is not a packfile.\n", packfile);
 		return 0;
 	}
 
@@ -220,7 +221,7 @@ int extract_pack(char *packfile, int mode)
 	(char *) mapped += n;
 
 	for (i = 0; i < numpackfiles; i++) {
-		fprintf(stderr, "%s\n", mapped->name);
+		LOGF("%s\n", mapped->name);
 		if (mode) extract_file(packhandle, mapped);
 		++mapped;
 	}
@@ -296,8 +297,8 @@ static int traverse_dir(FILE *f, char *name)
 
 	dir = opendir(name);
 	if (!dir) {
-		fprintf(stderr, "E: Trying to opendir() `%s': %s.\n",
-				name, strerror(errno));
+		LOGF("E: Trying to opendir() `%s': %s.\n",
+		     name, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
@@ -306,8 +307,8 @@ static int traverse_dir(FILE *f, char *name)
 			continue;
 
 		if ((len + strlen(d->d_name)) >= 56) {
-			fprintf(stderr, "File name too long: `%s/%s'\n",
-					name, d->d_name);
+			LOGF("File name too long: `%s/%s'\n",
+			     name, d->d_name);
 			exit(EXIT_FAILURE);
 		}
 
@@ -323,8 +324,7 @@ static int traverse_dir(FILE *f, char *name)
 		if (r == -1) return 0;
 
 		if ((buf.st_dev == fdev) && (buf.st_ino == finode)) {
-			fprintf(stderr, "Skipping the output archive `%s'.\n",
-					file);
+			LOGF("Skipping the output archive `%s'.\n", file);
 			continue;
 		}
 
@@ -367,22 +367,19 @@ static int create_pack(char *name, char *files[])
 		if (access(name, R_OK) == 0) {
 			int c;
 
-			fprintf(stderr, "`%s' exists. Overwrite (N/y)? ",
-					name);
+			LOGF("`%s' exists. Overwrite (N/y)? ", name);
 			c = getchar();
 			if (c != 'y') {
-				fprintf(stderr, "OK, exiting.\n");
+				LOGF("OK, exiting.\n");
 				exit(EXIT_FAILURE);
 
-			} else fprintf( stderr,
-				       "Overwriting `%s' as requested.\n",
-					name);
+			} else LOGF("Overwriting `%s' as requested.\n", name);
 		}
 
 		out = fopen(name, "w");
 		if (!out) {
-			fprintf(stderr, "E: Trying to fopen() `%s': %s.\n",
-					name, strerror(errno));
+			LOGF("E: Trying to fopen() `%s': %s.\n",
+			     name, strerror(errno));
 			return 0;
 		}
 
@@ -405,14 +402,13 @@ static int create_pack(char *name, char *files[])
 
 		r = stat(files[i], &buf);
 		if (r == -1) {
-			fprintf(stderr, "Failed to stat() `%s': %s.\n",
-					files[i], strerror(errno));
+			LOGF("Failed to stat() `%s': %s.\n",
+			     files[i], strerror(errno));
 			return 0;
 		}
 
 		if ((buf.st_dev == fdev) && (buf.st_ino == finode)) {
-			fprintf(stderr, "Skipping the output archive `%s'.\n",
-					files[i]);
+			LOGF("Skipping the output archive `%s'.\n", files[i]);
 			continue;
 		}
 
@@ -479,9 +475,9 @@ static void version_display()
 
 static void usage_display()
 {
-	fprintf (stderr, "Usage: upackddir [OPTIONS] FILENAME...\n"
-			 "Try `upackddir --help' for "
-			 "more informations.\n");
+	fprintf(stderr, "Usage: upackddir [OPTIONS] FILENAME...\n"
+			"Try `upackddir --help' for "
+			"more informations.\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -531,8 +527,8 @@ main (int argc, char *argv[])
 			case '?':
 				return EXIT_FAILURE;
 			default:
-				fprintf(stderr, "W: getopt_long() returned an "
-						"impossible value.\n");
+				LOGF("W: getopt_long() returned an "
+				     "impossible value.\n");
 				return EXIT_FAILURE;
 		}
 	}
@@ -540,8 +536,8 @@ main (int argc, char *argv[])
 		extract = 1;
 
 	if (file && extract) {
-		fprintf(stderr, "W: Ignoring -f. Use it only when creating "
-				"a new archive.\n");
+		LOGF("W: Ignoring -f. Use it only when creating "
+		     "a new archive.\n");
 	}
 
 	if (create && (list || extract))
@@ -550,13 +546,13 @@ main (int argc, char *argv[])
 	if (argv[optind] != NULL) {
 		if (create) {
 			ret = create_pack(file, argv + optind);
-			if (!ret) fprintf(stderr, "Can't create pack file.\n");
+			if (!ret) LOGF("Can't create pack file.\n");
 		}
 
 		if (list || extract)
 			ret = extract_pack(argv[optind], extract);
 	} else {
-		fprintf(stderr, "Argument expected.\n");
+		LOGF("Argument expected.\n");
 		usage_display();
 	}
 
