@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.11 2003/07/24 23:15:41 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.12 2003/07/24 23:17:00 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -417,7 +417,7 @@ main (int argc, char *argv[])
 {
 	int ret = 0, extract = 0, create = 0, list = 0;
 	char *file = NULL;
-	char c;
+	int c;
 	int index;
 
 	struct option long_opts[] = {
