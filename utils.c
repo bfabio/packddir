@@ -1,29 +1,24 @@
-#define __USE_XOPEN
-#include <unistd.h>
+/* $Id: utils.c,v 1.2 2003/09/24 12:50:56 fabiob Exp $ */
 #include "utils.h"
-/* $Id: utils.c,v 1.1 2003/07/25 16:46:16 fabiob Exp $ */
 
 /* Endianess
  * TODO: use the autotools */
+
+#define SWAP(x) ((x)<<24|((x)&0xff00)<<8|(x)>>24|((x)&0xff0000)>>8)
 
 static int is_little()
 {
 	int little = 1;
 
-	return (unsigned char) little;
+	return (*(unsigned char *) &little);
 }
 
-unsigned int endian_big_to_host(unsigned int n)
+unsigned endian_big_to_host(unsigned n)
 {
-	return is_little() ? n<<24|(n&0xff00)<<8|n>>24|(n&0xff0000)>>8 : n;
+	return is_little() ? SWAP(n) : n;
 }
 
-unsigned int endian_little_to_host(unsigned int n)
+unsigned endian_little_to_host(unsigned n)
 {
-	return is_little() ? n : n<<16|n>>16;
-}
-
-unsigned int endian_host_to_little(unsigned int n)
-{
-	return endian_little_to_host(n);
+	return is_little() ? n : SWAP(n);
 }

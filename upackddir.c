@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.13 2003/07/25 16:41:24 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.14 2003/09/24 12:50:56 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -393,7 +393,7 @@ static int create_pack(char *name, char *files[])
 	fwrite(&dirlen, 4, 1, out);
 
 	fseek(out, 0, SEEK_SET);
-	i = IDPAKHEADER;
+	i = endian_host_to_big(IDPAKHEADER);
 	fwrite(&i, 4, 1, out);
 
 	fclose(out);
