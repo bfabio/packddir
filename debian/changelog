@@ -1,4 +1,4 @@
-upackddir (0.0.6) unstable; urgency=low
+upackddir (0.0.6-1) unstable; urgency=low
 
   * New upstream release.
     - Remove the limit of files contained in the archive.
