@@ -113,7 +113,7 @@ int extract_file(FILE *f, dpackfile_t *info)
 
 	out = fopen(info->name, "w");
 	if (!out) {
-		perror("Can't open file");
+		perror("Can't open file for write");
 		return 0;
 	}
 
@@ -140,6 +140,14 @@ int extract_file(FILE *f, dpackfile_t *info)
 	return 1;
 }
 
+/* Extracts a PackdDir file to current directory.
+ * @packfile: the filename
+ * @mode: extraction mode,
+ *	  0 just print filenames
+ *	  1 actually extract files
+ *
+ * returns: pack_t on success,
+ *	    NULL on failure */
 pack_t *extract_pack(char *packfile, int mode)
 {
 	dpackheader_t header;
@@ -203,7 +211,7 @@ int
 main (int argc, char *argv[])
 {
 	if (argc < 2) {
-		fprintf (stderr, "unpack filename\n");
+		fprintf (stderr, "USAGE:\nupackddir FILENAME\n");
 		return EXIT_FAILURE;
 	}
 
