@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.36 2003/12/02 23:09:58 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.37 2003/12/03 00:05:40 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -531,6 +531,7 @@ static void help_display()
 	       "  -f, --file=ARG\tWrite new archive to ARG."
 	                        " Default is stdout.\n"
 	       "  -t, --list\t\tList contents.\n"
+	       "  -x ARG\t\tExtract file ARG from the archive.\n"
 	       "  --version\t\tDisplay version information.\n"
 	       "Report bugs to <fabiobonelli@libero.it>\n");
 	exit(EXIT_SUCCESS);
