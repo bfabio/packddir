@@ -10,7 +10,7 @@ upackddir.o: upackddir.c
 	$(CC) $(CCFLAGS) --std=c99 -c upackddir.c
 
 .c.o:
-	$(CC) $(CCFLAGS) -c -o $@.o $<
+	$(CC) $(CCFLAGS) -c -o $@ $<
 
 clean:
 	rm -f upackddir $(OBJS)
