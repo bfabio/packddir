@@ -1,5 +1,5 @@
 CC=gcc
-CCFLAGS=-g -O2 -Wall
+CCFLAGS=-g -Wall
 OBJS=lists.o upackddir.o
 DESTDIR=/
 

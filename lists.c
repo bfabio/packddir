@@ -1,3 +1,4 @@
+/* $Id: lists.c,v 1.2 2003/07/14 17:32:02 fabiob Exp $ */
 #include <stdlib.h>
 
 #include "lists.h"
@@ -14,9 +15,6 @@ list_t list_new()
 
 void list_delete(list_t list, list_node_t node)
 {
-	if (node->element)
-		free(node->element);
-	
 	if (list->first == list->last) {
 		list->first = list->last = NULL;
 

@@ -1,3 +1,4 @@
+/* $Id: lists.h,v 1.2 2003/07/14 17:32:02 fabiob Exp $ */
 #ifndef _LIST_H
 #define _LIST_H
 
@@ -17,7 +18,7 @@ struct list {
 
 typedef struct list * list_t;
 
-#define foreach(x, l) for (list_node_t n = (l)->first; (x) = n; n = n->next)
+#define foreach(x, l) for (list_node_t n = (l)->first; ((x) = n); n = n->next)
 
 list_t list_new();
 void list_append(list_t list, void *element);

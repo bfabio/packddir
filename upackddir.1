@@ -3,21 +3,43 @@
 upackddir \- extract PackdDir files.
 .SH SYNOPSIS
 .B upackddir
-\fI[options] 
-FILENAME\fR
+[
+.I options
+]
+\fBFILENAME...\fR
 .SH DESCRIPTION
 .PP
-Extracts PackdDir files.
+Extracts and create PackdDir files.
+
+By default \fBupackddir\fR extracts the given file.
 .SH OPTIONS
 .TP
 \fB\-t, \-\-list\fR
-just list the contents of the archive
+just list the contents of the archive.
+.TP
+\fB\-c, \-\-create\fR
+create a new archive.
+.TP
+\fB\-f, \-\-file=ARG\fR
+use this filename for a newly created archive. Default is stdout.
 .TP
 \fB\-\-help\fR
-display help and exit
+display help and exit.
 .TP
 \fB\-\-version\fR
-output version information and exit
+output version information and exit.
+.SH EXAMPLES
+Extracting a PackdDir file:
+.br
+	upackddir foo.pak
+
+Creating a PackdDir file:
+.br
+	upackddir -c . > currentdirectory.pak
+.br
+	upackddir -cf currentdirectory.pak .
+.br
+	upackddir -cf variuous.pak /root /var /tmp
 .SH AUTHOR
 Written by Fabio Bonelli.
 .SH "REPORTING BUGS"
