@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.40 2005/01/13 23:26:43 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.41 2005/01/13 23:53:43 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -252,7 +252,8 @@ int packfile_extract(char *packfile, int mode)
 
 	if (mapped == MAP_FAILED) {
 		perror("mmap");
-		return 0;
+		/* return packfile_extract_not_mmapped(packfile, mode); */
+		return 1;
 	}
 
 	/* Let's jump to the beginning of our sweet data */
@@ -267,6 +268,10 @@ int packfile_extract(char *packfile, int mode)
 	printf("Packfile %s (%i files)\n", packfile, pack->numfiles);
 
 	return 1;
+}
+
+int packfile_extract_not_mmapped(pack_t *pack, int mode)
+{
 }
 
 /* Extracts a specific file in a PackdDir archive.

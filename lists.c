@@ -17,12 +17,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/* $Id: lists.c,v 1.5 2004/01/13 16:50:23 fabiob Exp $ */
+/* $Id: lists.c,v 1.6 2005/01/13 23:53:43 fabiob Exp $ */
 
 /* lists.c - Lists handling */
 
 #include <stdlib.h>
 
+#include "log.h"
 #include "lists.h"
 
 list_t list_new()
@@ -30,6 +31,11 @@ list_t list_new()
 	list_t l;
 
 	l = malloc(sizeof(list_t));
+	if (!l) {
+		LOG("malloc() failed.\n");
+		exit(EXIT_FAILURE);
+	}
+
 	l->first = l->last = NULL;
 
 	return l;
