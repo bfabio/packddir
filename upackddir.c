@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.10 2003/07/14 17:32:02 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.11 2003/07/24 23:15:41 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -283,9 +283,13 @@ static int traverse_dir(FILE *f, char *name)
 			exit(EXIT_FAILURE);
 		}
 
-		strcpy(file, name);
-		file[len - 1] = '/';
-		file[len] = 0;
+		file[0] = '\0';
+		if (strcmp(name, ".") != 0) {
+			strcpy(file, name);
+			file[len - 1] = '/';
+			file[len] = 0;
+		}
+
 		strcat(file, d->d_name);
 		r = stat(file, &buf);
 		if (r == -1) return 0;
@@ -301,7 +305,6 @@ static int traverse_dir(FILE *f, char *name)
 
 			append_file(f, file);
 		}
-
 	}
 	return 1;
 }
@@ -322,6 +325,8 @@ static int create_pack(char *name, char *files[])
 	if (!out) {
 		perror("fopen()");
 		return 0;
+	} else if (out != stdout) {
+		stat(name, &buf);
 	}
 
 	packedfiles = list_new();
