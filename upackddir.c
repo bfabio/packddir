@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.24 2003/12/02 18:44:34 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.25 2003/12/02 19:29:22 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -90,7 +90,7 @@ int _makepath(const char *path)
 
 	len = p - path;
 	if (len >= MAX_FILENAMELEN) {
-		fprintf(stderr, "Directory name too long\n");
+		fprintf(stderr, "Directory name '%s` too long\n", path);
 		return 0;
 	}
 
@@ -183,7 +183,10 @@ int extract_pack(char *packfile, int mode)
 	packedfile_t *mapped;
 	long ps;
 
-	packhandle = fopen(packfile, "rb");
+	if (strcmp(packfile, "-") == 0)
+		packhandle = stdin;
+	else packhandle = fopen(packfile, "rb");
+
 	if (!packhandle) {
 		fprintf(stderr, "Error extracting `%s': %s\n",
 				 packfile, strerror(errno));
