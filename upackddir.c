@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.5 2003/06/18 23:23:45 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.6 2003/06/19 19:46:12 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -225,6 +225,7 @@ static void help_display()
 	       "Options:\n"
 	       "  --help\t\tThis help\n"
 	       "  --version\t\tDisplay version information\n");
+	exit(EXIT_SUCCESS);
 }
 
 static void version_display()
@@ -233,16 +234,20 @@ static void version_display()
 	       "Copyright (C) 1997-2001 Id Software, Inc.\n"
                "Copyright (C) 2002 The Quakeforge Project.\n"
                "Copyright (C) 2003 Fabio Bonelli <fabiobonelli@libero.it>\n");
+	exit(EXIT_SUCCESS);
 }
 
 int
 main (int argc, char *argv[])
 {
+	int extract = 1;
+
 	char c;
 	int index;
 	struct option long_opts[] = {
 		{ "help", 0, 0, 'h' },
 		{ "version", 0, 0, 0 },
+		{ "list", 0, 0, 't' },
 		{ NULL, 0, 0, 0}
 	};
 
@@ -253,20 +258,27 @@ main (int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	c = getopt_long(argc, argv, "h", long_opts, &index);
-	switch (c) {
-		case 'h':
-			help_display();
-			break;
-		case 0:
-			version_display();
-			break;
-		default:
-			fprintf(stderr, "W: getopt_long returned an impossible"
-					"value.\n");
+	while ((c = getopt_long(argc, argv, "ht", long_opts, &index)) != -1) {
+		switch (c) {
+			case 'h':
+				help_display();
+				break;
+			case 0:
+				version_display();
+				break;
+			case 't':
+				extract = 0;
+				break;
+			case '?':
+				return EXIT_FAILURE;
+			default:
+				fprintf(stderr, "W: getopt_long() returned an "
+						"impossible value.\n");
+				return EXIT_FAILURE;
+		}
 	}
 
-	extract_pack(argv[1], 1);
+	extract_pack(argv[optind], extract);
 
 	return EXIT_SUCCESS;
 }
