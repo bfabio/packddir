@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.37 2003/12/03 00:05:40 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.38 2004/01/12 17:52:30 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -69,6 +69,7 @@ typedef struct pack_s {
 	char filename[MAX_OSPATH];
 	packheader_t header;
 	FILE *handle;
+	off_t length;
 	int numfiles;
 	packedfile_t *files;
 } pack_t;
@@ -132,6 +133,7 @@ int makepath(const char *path)
 pack_t *packfile_open(char *name)
 {
 	pack_t *pack;
+	struct stat sbuf;
 
 	pack = malloc(sizeof(pack_t));
 	if (!pack) return NULL;
@@ -147,10 +149,23 @@ pack_t *packfile_open(char *name)
 		return NULL;
 	}
 
+	if (stat(name, &sbuf) == -1) {
+		LOGF("Can't stat() %s.\n", name);
+		return NULL;
+	}
+	pack->length = sbuf.st_size;
+
 	fread(&pack->header, 1, sizeof(pack->header), pack->handle);
 
 	if (endian_big_to_host(pack->header.ident) != IDPAKHEADER) {
-		LOGF("%s is not a packfile.\n", name);
+		LOGF("`%s' is not a packfile.\n", name);
+		return NULL;
+	}
+
+	if ((endian_little_to_host(pack->header.dirlen) +
+	     endian_little_to_host(pack->header.dirofs)) > pack->length) {
+		LOGF("Packddir file `%s' seems corrupted: header indicates "
+		     "impossible values.\n", name);
 		return NULL;
 	}
 
