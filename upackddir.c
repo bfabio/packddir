@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.21 2003/12/02 06:31:03 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.22 2003/12/02 06:33:56 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -193,7 +193,8 @@ int extract_pack(char *packfile, int mode)
 		return 0;
 	}
 
-	numpackfiles = endian_little_to_host(header.dirlen) / sizeof (packedfile_t);
+	numpackfiles = endian_little_to_host(header.dirlen) /
+		       sizeof (packedfile_t);
 
 	if (numpackfiles > MAX_FILES_IN_PACK) {
 		fprintf(stderr, "%s has %i files, max is %i\n",
