@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.4 2003/06/18 22:38:25 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.5 2003/06/18 23:23:45 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -224,7 +224,7 @@ static void help_display()
 	       "Extracts PackdDir archives.\n\n"
 	       "Options:\n"
 	       "  --help\t\tThis help\n"
-	       "  --version\t\tDisplay version information");
+	       "  --version\t\tDisplay version information\n");
 }
 
 static void version_display()
@@ -249,7 +249,7 @@ main (int argc, char *argv[])
 	if (argc < 2) {
 		fprintf (stderr, "Usage: upackddir FILENAME\n"
 				 "Try `upackddir --help' for "
-				 "more informations.");
+				 "more informations.\n");
 		return EXIT_FAILURE;
 	}
 
