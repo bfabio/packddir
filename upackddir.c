@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.32 2003/12/02 21:46:52 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.33 2003/12/02 21:52:17 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -72,7 +72,6 @@ typedef struct pack_s {
 	int numfiles;
 	packedfile_t *files;
 } pack_t;
-
 
 int makepath(const char *path);
 
@@ -210,7 +209,7 @@ int extract_file(pack_t *pack, packedfile_t *info)
  *
  * returns: 1 on success,
  *	    0 on failure */
-int extract_pack(char *packfile, int mode)
+int packfile_extract(char *packfile, int mode)
 {
 	int i, n;
 	packedfile_t *mapped;
@@ -365,7 +364,7 @@ static int traverse_dir(FILE *f, char *name)
  *
  * returns: 1 on success
  *          0 on failure */
-static int create_pack(char *name, char *files[])
+static int packfile_create(char *name, char *files[])
 {
 	int i = 0;
 	int dirlen;
@@ -560,12 +559,12 @@ main (int argc, char *argv[])
 
 	if (argv[optind] != NULL) {
 		if (create) {
-			ret = create_pack(file, argv + optind);
+			ret = packfile_create(file, argv + optind);
 			if (!ret) LOG("Can't create pack file.\n");
 		}
 
 		if (list || extract)
-			ret = extract_pack(argv[optind], extract);
+			ret = packfile_extract(argv[optind], extract);
 	} else {
 		LOG("Argument expected.\n");
 		usage_display();
