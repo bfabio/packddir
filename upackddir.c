@@ -1,8 +1,8 @@
 /*  upackddir - extracts files from PackdDir archives
 
  *  Copyright (C) 1997-2001 Id Software, Inc.
- *  Copyright (c) 2002 The Quakeforge Project.
- *  Copyright (C) 2003 <fabiobonelli@libero.it>
+ *  Copyright (C) 2002 The Quakeforge Project.
+ *  Copyright (C) 2003 Fabio Bonelli <fabiobonelli@libero.it>
 
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,11 +18,18 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
+/*  $Id: upackddir.c,v 1.3 2003/06/18 22:28:04 fabiob Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
+
+/* Needed for getopt_long() */
+#define __GNU_SOURCE
+#include <getopt.h>
+
+#define PACKDDIR_VERSION "0.0.1"
 
 #define MAX_QPATH 64
 #define MAX_OSPATH 128
@@ -207,15 +214,56 @@ pack_t *extract_pack(char *packfile, int mode)
 	return pack;
 }
 
+static void help_display()
+{
+	printf("Usage: upackddir FILENAME\n"
+	       "Extracts PackdDir archives.\n\n"
+	       "Options:\n"
+	       "  --help\t\tThis help\n"
+	       "  --version\t\tDisplay version information");
+}
+
+static void version_display()
+{
+	printf("upackddir v." PACKDDIR_VERSION "\n"
+	       "Copyright (C) 1997-2001 Id Software, Inc.\n"
+               "Copyright (C) 2002 The Quakeforge Project.\n"
+               "Copyright (C) 2003 Fabio Bonelli <fabiobonelli@libero.it>\n");
+}
+
 int
 main (int argc, char *argv[])
 {
+	char c;
+	int index;
+	struct option long_opts[] = {
+		{ "help", 0, 0, 'h' },
+		{ "version", 0, 0, 0 },
+		{ NULL, 0, 0, 0}
+	};
+
 	if (argc < 2) {
-		fprintf (stderr, "USAGE:\nupackddir FILENAME\n");
+		fprintf (stderr, "Usage: upackddir FILENAME\n"
+				 "Try `upackddir --help' for "
+				 "more informations.");
 		return EXIT_FAILURE;
+	}
+
+	c = getopt_long(argc, argv, "h", long_opts, &index);
+	switch (c) {
+		case 'h':
+			help_display();
+			break;
+		case 0:
+			version_display();
+			break;
+		default:
+			fprintf(stderr, "W: getopt_long returned an impossible"
+					"value.\n");
 	}
 
 	extract_pack(argv[1], 1);
 
 	return EXIT_SUCCESS;
 }
+/* vim set ai ts=8 */
