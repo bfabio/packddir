@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.33 2003/12/02 21:52:17 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.34 2003/12/02 21:53:20 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -161,7 +161,7 @@ pack_t *packfile_open(char *name)
  *
  * returns: 1 on success
  *          0 on failure */
-int extract_file(pack_t *pack, packedfile_t *info)
+int packfile_extract_file(pack_t *pack, packedfile_t *info)
 {
 	FILE *out;
 	char buf[BUFSIZ * 2];
@@ -236,7 +236,7 @@ int packfile_extract(char *packfile, int mode)
 
 	for (i = 0; i < pack->numfiles; i++) {
 		fprintf(stderr, "%s\n", mapped->name);
-		if (mode) extract_file(pack, mapped);
+		if (mode) packfile_extract_file(pack, mapped);
 		++mapped;
 	}
 
