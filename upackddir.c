@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.34 2003/12/02 21:53:20 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.35 2003/12/02 23:06:11 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -123,6 +123,12 @@ int makepath(const char *path)
 	return ret;
 }
 
+/* Opens a PackdDir file, checking if we are actually dealing with
+ * a PackdDir file.
+ * @name: path of the file
+ *
+ * returns: a pack_t structure filled with data on success,
+ *	    NULL on failure. */
 pack_t *packfile_open(char *name)
 {
 	pack_t *pack;
@@ -243,6 +249,58 @@ int packfile_extract(char *packfile, int mode)
 	printf("Packfile %s (%i files)\n", packfile, pack->numfiles);
 
 	return 1;
+}
+
+/* Extracts a specific file in a PackdDir archive.
+ * @packfile: the filename
+ * @name: name of the file present in the archive that will be extracted
+ *
+ * returns: 1 on success,
+ *	    0 on failure */
+int packfile_extract_filename(char *packfile, char *name)
+{
+	pack_t *pack;
+	packedfile_t *mapped;
+	long ps;
+	int n, i, found = 0;
+
+	pack = packfile_open(packfile);
+	if (!pack) return 0;
+
+	/* XXX: should we load this instead of using mmap()? */
+
+	/* With mmap() we MUST use a multiple of the page size as offset */
+	ps = sysconf(_SC_PAGESIZE);
+	n = endian_little_to_host(pack->header.dirofs) % ps;
+	mapped = mmap(0, endian_little_to_host(pack->header.dirlen) + n,
+		      PROT_READ, MAP_PRIVATE, fileno(pack->handle),
+		      endian_little_to_host(pack->header.dirofs) - n);
+
+	if (mapped == MAP_FAILED) {
+		perror("mmap");
+		return 0;
+	}
+
+	/* Let's jump to the beginning of our sweet data */
+	(char *) mapped += n;
+
+	for (i = 0; i < pack->numfiles; i++) {
+		if (strcmp(name, mapped->name) == 0) {
+			found = 1;
+			fprintf(stderr, "%s\n", name);
+			packfile_extract_file(pack, mapped);
+			break;
+		}
+
+		++mapped;
+	}
+	if (!found) {
+		LOGF("There is no `%s' in `%s'.\n", name, packfile);
+		LOGF("You can see the files with \"upackddir -t %s\".\n",
+		     packfile);
+	}
+
+	return found;
 }
 
 ino_t finode; /* Inode of the output file */
@@ -506,6 +564,7 @@ main (int argc, char *argv[])
 {
 	int ret = 0, extract = 0, create = 0, list = 0;
 	char *file = NULL;
+	list_t filestoextract; /* List of files given with -x switch(es). */
 	int c;
 	int index;
 
@@ -521,7 +580,8 @@ main (int argc, char *argv[])
 	if (argc < 2)
 		usage_display();
 
-	while ((c = getopt_long(argc, argv, "htcf:", long_opts, &index)) != -1) {
+	filestoextract = list_new();
+	while ((c = getopt_long(argc, argv, "htcf:x:", long_opts, &index)) != -1) {
 		switch (c) {
 			case 'h':
 				help_display();
@@ -538,6 +598,9 @@ main (int argc, char *argv[])
 			case 'f':
 				file = optarg;
 				break;
+			case 'x':
+				list_append(filestoextract, optarg);
+				break;
 			case '?':
 				return EXIT_FAILURE;
 			default:
@@ -546,7 +609,7 @@ main (int argc, char *argv[])
 				return EXIT_FAILURE;
 		}
 	}
-	if (!create && !list)
+	if (!create && !list && !list_empty(filestoextract))
 		extract = 1;
 
 	if (file && extract) {
@@ -558,6 +621,8 @@ main (int argc, char *argv[])
 		error_options_conflict();
 
 	if (argv[optind] != NULL) {
+		list_node_t packedfile;
+
 		if (create) {
 			ret = packfile_create(file, argv + optind);
 			if (!ret) LOG("Can't create pack file.\n");
@@ -565,8 +630,12 @@ main (int argc, char *argv[])
 
 		if (list || extract)
 			ret = packfile_extract(argv[optind], extract);
+
+		foreach(packedfile, filestoextract)
+			packfile_extract_filename(argv[optind],
+						  packedfile->element);
 	} else {
-		LOG("Argument expected.\n");
+		LOG("Missing filename.\n");
 		usage_display();
 	}
 

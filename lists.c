@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/* $Id: lists.c,v 1.3 2003/07/25 16:41:24 fabiob Exp $ */
+/* $Id: lists.c,v 1.4 2003/12/02 23:06:11 fabiob Exp $ */
 
 /* lists.c - Lists handling */
 
@@ -75,4 +75,9 @@ void list_append(list_t list, void *element)
 	}
 
 	list->last = node;
+}
+
+int list_empty(list_t list)
+{
+	return list->first ? 1 : 0;
 }
