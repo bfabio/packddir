@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.31 2003/12/02 21:09:09 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.32 2003/12/02 21:46:52 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -63,6 +63,16 @@ typedef struct {
 	char name[56];
 	int filepos, filelen;
 } packedfile_t;
+
+/* PackdDir file */
+typedef struct pack_s {
+	char filename[MAX_OSPATH];
+	packheader_t header;
+	FILE *handle;
+	int numfiles;
+	packedfile_t *files;
+} pack_t;
+
 
 int makepath(const char *path);
 
@@ -114,21 +124,53 @@ int makepath(const char *path)
 	return ret;
 }
 
+pack_t *packfile_open(char *name)
+{
+	pack_t *pack;
+
+	pack = malloc(sizeof(pack_t));
+	if (!pack) return NULL;
+
+	if (strcmp(name, "-") == 0)
+		pack->handle = stdin;
+	else pack->handle = fopen(name, "rb");
+
+	if (!pack->handle) {
+		LOGF("Error extracting `%s': %s\n",
+		     name, strerror(errno));
+
+		return NULL;
+	}
+
+	fread(&pack->header, 1, sizeof(pack->header), pack->handle);
+
+	if (endian_big_to_host(pack->header.ident) != IDPAKHEADER) {
+		LOGF("%s is not a packfile.\n", name);
+		return NULL;
+	}
+
+	pack->numfiles = endian_little_to_host(pack->header.dirlen) /
+			 sizeof(packedfile_t);
+
+	return pack;
+}
+
 /* Extracts the file described by the packedfile_t entry
- * from the given stream.
- * @f:    file stream associated with the PackdDir file
+ * from the given packfile.
+ * @pack: PackdDir file, returned from packfile_open()
  * @info: file entry
  *
  * returns: 1 on success
  *          0 on failure */
-int extract_file(FILE *f, packedfile_t *info)
+int extract_file(pack_t *pack, packedfile_t *info)
 {
 	FILE *out;
 	char buf[BUFSIZ * 2];
 	int rest = 0, count = BUFSIZ * 2;
 
-	if (!makepath(info->name))
-		return 0;
+	if (!pack) return 0;
+
+	if (!makepath(info->name)) return 0;
 
 	out = fopen(info->name, "w");
 	if (!out) {
@@ -137,12 +179,12 @@ int extract_file(FILE *f, packedfile_t *info)
 		return 0;
 	}
 
-	fseek(f, endian_little_to_host(info->filepos), SEEK_SET);
+	fseek(pack->handle, endian_little_to_host(info->filepos), SEEK_SET);
 
 	rest = endian_little_to_host(info->filelen);
 	if (rest < BUFSIZ * 2) count = rest;
 
-	while (fread(buf, count, 1, f)) {
+	while (fread(buf, count, 1, pack->handle)) {
 		if (!fwrite(buf, count, 1, out))
 			break;
 
@@ -170,39 +212,20 @@ int extract_file(FILE *f, packedfile_t *info)
  *	    0 on failure */
 int extract_pack(char *packfile, int mode)
 {
-	packheader_t header;
-	int i, n, numpackfiles;
-	FILE *packhandle;
+	int i, n;
 	packedfile_t *mapped;
+	pack_t *pack;
 	long ps;
 
-	if (strcmp(packfile, "-") == 0)
-		packhandle = stdin;
-	else packhandle = fopen(packfile, "rb");
-
-	if (!packhandle) {
-		LOGF("Error extracting `%s': %s\n",
-		     packfile, strerror(errno));
-
-		return 0;
-	}
-
-	fread(&header, 1, sizeof (header), packhandle);
-
-	if (endian_big_to_host(header.ident) != IDPAKHEADER) {
-		LOGF("%s is not a packfile.\n", packfile);
-		return 0;
-	}
-
-	numpackfiles = endian_little_to_host(header.dirlen) /
-		       sizeof (packedfile_t);
+	pack = packfile_open(packfile);
+	if (!pack) return 0;
 
 	/* With mmap() we MUST use a multiple of the page size as offset */
 	ps = sysconf(_SC_PAGESIZE);
-	n = endian_little_to_host(header.dirofs) % ps;
-	mapped = mmap(0, endian_little_to_host(header.dirlen) + n, PROT_READ,
-		      MAP_PRIVATE, fileno(packhandle),
-		      endian_little_to_host(header.dirofs) - n);
+	n = endian_little_to_host(pack->header.dirofs) % ps;
+	mapped = mmap(0, endian_little_to_host(pack->header.dirlen) + n,
+		      PROT_READ, MAP_PRIVATE, fileno(pack->handle),
+		      endian_little_to_host(pack->header.dirofs) - n);
 
 	if (mapped == MAP_FAILED) {
 		perror("mmap");
@@ -212,13 +235,13 @@ int extract_pack(char *packfile, int mode)
 	/* Let's jump to the beginning of our sweet data */
 	(char *) mapped += n;
 
-	for (i = 0; i < numpackfiles; i++) {
+	for (i = 0; i < pack->numfiles; i++) {
 		fprintf(stderr, "%s\n", mapped->name);
-		if (mode) extract_file(packhandle, mapped);
+		if (mode) extract_file(pack, mapped);
 		++mapped;
 	}
 
-	printf("Packfile %s (%i files)\n", packfile, numpackfiles);
+	printf("Packfile %s (%i files)\n", packfile, pack->numfiles);
 
 	return 1;
 }
