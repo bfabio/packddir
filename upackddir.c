@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.12 2003/07/24 23:17:00 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.13 2003/07/25 16:41:24 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -35,14 +35,15 @@
 #include <getopt.h>
 
 #include "lists.h"
+#include "utils.h"
 
-#define PACKDDIR_VERSION "0.0.3"
+#define PACKDDIR_VERSION "0.0.4"
 
 #define MAX_QPATH 64
 #define MAX_OSPATH 128
 #define MAX_FILENAMELEN 128
 #define MAX_FILES_IN_PACK 8192
-#define IDPAKHEADER (('K'<<24) + ('C'<<16) + ('A'<<8) + 'P')
+#define IDPAKHEADER (('P'<<24) + ('A'<<16) + ('C'<<8) + 'K')
 
 #define DEBUG
 
@@ -139,9 +140,9 @@ int extract_file(FILE *f, packedfile_t *info)
 		return 0;
 	}
 
-	fseek(f, info->filepos, SEEK_SET);
+	fseek(f, endian_little_to_host(info->filepos), SEEK_SET);
 
-	rest = info->filelen;
+	rest = endian_little_to_host(info->filelen);
 	if (rest < BUFSIZ) count = rest;
 
 	while (fread(buf, count, 1, f)) {
@@ -187,12 +188,12 @@ int extract_pack(char *packfile, int mode)
 
 	fread(&header, 1, sizeof (header), packhandle);
 
-	if (header.ident != IDPAKHEADER) {
+	if (endian_big_to_host(header.ident) != IDPAKHEADER) {
 		fprintf(stderr, "%s is not a packfile.\n", packfile);
 		return 0;
 	}
 
-	numpackfiles = header.dirlen / sizeof (packedfile_t);
+	numpackfiles = endian_little_to_host(header.dirlen) / sizeof (packedfile_t);
 
 	if (numpackfiles > MAX_FILES_IN_PACK) {
 		fprintf(stderr, "%s has %i files, max is %i\n",
@@ -200,8 +201,8 @@ int extract_pack(char *packfile, int mode)
 		exit(EXIT_FAILURE);
 	}
 
-	fseek(packhandle, header.dirofs, SEEK_SET);
-	fread(files, 1, header.dirlen, packhandle);
+	fseek(packhandle, endian_little_to_host(header.dirofs), SEEK_SET);
+	fread(files, 1, endian_little_to_host(header.dirlen), packhandle);
 
 	ph = fopen (packfile, "rb");
 
@@ -217,6 +218,8 @@ int extract_pack(char *packfile, int mode)
 	return 1;
 }
 
+ino_t finode; /* Inode of the output file */
+dev_t fdev;   /* Device of the output file */
 static int append_file(FILE *f, char *name)
 {
 	FILE *src;
@@ -273,8 +276,7 @@ static int traverse_dir(FILE *f, char *name)
 	}
 
 	while ((d = readdir(dir))) {
-		if (!strcmp(d->d_name, ".") || !strcmp(d->d_name, "..")
-		    || !strcmp(d->d_name, "file.pak"))
+		if (!strcmp(d->d_name, ".") || !strcmp(d->d_name, ".."))
 			continue;
 
 		if ((len + strlen(d->d_name)) >= 56) {
@@ -294,13 +296,20 @@ static int traverse_dir(FILE *f, char *name)
 		r = stat(file, &buf);
 		if (r == -1) return 0;
 
+		if ((buf.st_dev == fdev) && (buf.st_ino == finode)) {
+			fprintf(stderr, "Skipping the output archive `%s'.\n",
+					file);
+			continue;
+		}
+
+
 		if (S_ISDIR(buf.st_mode))
 			traverse_dir(f, file);
 		else {
 			pf = malloc(sizeof(packedfile_t));
 			strcpy(pf->name, file);
-			pf->filepos = ftell(f);
-			pf->filelen = buf.st_size;
+			pf->filepos = endian_host_to_little(ftell(f));
+			pf->filelen = endian_host_to_little(buf.st_size);
 			list_append(packedfiles, pf);
 
 			append_file(f, file);
@@ -325,8 +334,19 @@ static int create_pack(char *name, char *files[])
 	if (!out) {
 		perror("fopen()");
 		return 0;
-	} else if (out != stdout) {
-		stat(name, &buf);
+	}
+
+	if (out != stdout) {
+		int r;
+
+		r = stat(name, &buf);
+		if (r == -1) {
+			perror("stat() on output file");
+			return 0;
+		} else {
+			fdev = buf.st_dev;
+			finode = buf.st_ino;
+		}
 	}
 
 	packedfiles = list_new();
@@ -338,13 +358,19 @@ static int create_pack(char *name, char *files[])
 		r = stat(files[i], &buf);
 		if (r == -1) return 0;
 
+		if ((buf.st_dev == fdev) && (buf.st_ino == finode)) {
+			fprintf(stderr, "Skipping the output archive `%s'.\n",
+					files[i]);
+			continue;
+		}
+
 		if (S_ISDIR(buf.st_mode))
 			traverse_dir(out, files[i]);
 		else {
 			f = malloc(sizeof(packedfile_t));
 			strcpy(f->name, files[i]);
-			f->filepos = ftell(out);
-			f->filelen = buf.st_size;
+			f->filepos = endian_host_to_little(ftell(out));
+			f->filelen = endian_host_to_little(buf.st_size);
 			list_append(packedfiles, f);
 
 			append_file(out, files[i]);
@@ -359,7 +385,8 @@ static int create_pack(char *name, char *files[])
 		fwrite(&((packedfile_t *) node->element)->filelen, 4, 1, out);
 	}
 
-	dirlen = ftell(out) - position;
+	dirlen = endian_host_to_little(ftell(out) - position);
+	position = endian_host_to_little(position);
 
 	fseek(out, 4, SEEK_SET);
 	fwrite(&position, 4, 1, out);
@@ -471,7 +498,7 @@ main (int argc, char *argv[])
 	if (argv[optind] != NULL) {
 		if (create) {
 			ret = create_pack(file, argv + optind);
-			if (!ret) perror("create");
+			if (!ret) fprintf(stderr, "Can't create pack file\n");
 		}
 
 		if (list || extract)

@@ -1,6 +1,6 @@
 CC=gcc
 CCFLAGS=-g -Wall
-OBJS=lists.o upackddir.o
+OBJS=lists.o utils.o upackddir.o
 DESTDIR=/
 
 all: $(OBJS)
