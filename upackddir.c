@@ -19,11 +19,16 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.22 2003/12/02 06:33:56 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.23 2003/12/02 07:44:14 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/mman.h>
+
+/* Needed for fileno() */
+#define __USE_POSIX
 #include <stdio.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -41,7 +46,6 @@
 
 #define MAX_OSPATH 128
 #define MAX_FILENAMELEN 128
-#define MAX_FILES_IN_PACK 8192
 #define IDPAKHEADER (('P'<<24) + ('A'<<16) + ('C'<<8) + 'K')
 
 #define DEBUG
@@ -49,8 +53,8 @@
 /* PackdDir file header */
 typedef struct {
 	int ident;	/* IDPAKHEADER */
-	int dirofs;
-	int dirlen;
+	int dirofs;	/* Directory offset */
+	int dirlen;	/* Directory length */
 } packheader_t;
 
 /* Packed file */
@@ -175,8 +179,9 @@ int extract_pack(char *packfile, int mode)
 {
 	packheader_t header;
 	int i, numpackfiles;
-	FILE *packhandle, *ph;
-	packedfile_t files[MAX_FILES_IN_PACK];
+	FILE *packhandle;
+	packedfile_t *mapped;
+	long ps; int s;
 
 	packhandle = fopen(packfile, "rb");
 	if (!packhandle) {
@@ -196,25 +201,28 @@ int extract_pack(char *packfile, int mode)
 	numpackfiles = endian_little_to_host(header.dirlen) /
 		       sizeof (packedfile_t);
 
-	if (numpackfiles > MAX_FILES_IN_PACK) {
-		fprintf(stderr, "%s has %i files, max is %i\n",
-				packfile, numpackfiles, MAX_FILES_IN_PACK);
-		exit(EXIT_FAILURE);
+	/* With mmap() we MUST use a multiple of the page size as offset */
+	ps = sysconf(_SC_PAGESIZE);
+	n = endian_little_to_host(header.dirofs) % ps;
+	mapped = mmap(0, endian_little_to_host(header.dirlen) + n, PROT_READ,
+		      MAP_PRIVATE, fileno(packhandle),
+		      endian_little_to_host(header.dirofs) - n);
+
+	if (mapped == MAP_FAILED) {
+		perror("mmap");
+		return 0;
 	}
 
-	fseek(packhandle, endian_little_to_host(header.dirofs), SEEK_SET);
-	fread(files, 1, endian_little_to_host(header.dirlen), packhandle);
+	/* Let's jump to the beginning of our sweet data */
+	(char *) mapped += n;
 
-	ph = fopen (packfile, "rb");
-
-	/* Parse the directory */
 	for (i = 0; i < numpackfiles; i++) {
-
-		fprintf(stderr, "%s\n", files[i].name);
-		if (mode) extract_file(ph, &files[i]);
+		fprintf(stderr, "%s\n", mapped->name);
+		if (mode) extract_file(packhandle, mapped);
+		++mapped;
 	}
 
-	printf ("Packfile %s (%i files)\n", packfile, numpackfiles);
+	printf("Packfile extracted %s (%i files)\n", packfile, numpackfiles);
 
 	return 1;
 }
