@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.16 2003/09/25 23:06:17 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.17 2003/09/26 12:48:15 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -136,7 +136,8 @@ int extract_file(FILE *f, packedfile_t *info)
 
 	out = fopen(info->name, "w");
 	if (!out) {
-		perror("Can't open file for write");
+		fprintf(stderr, "Can't open file `%s' for write: %s.\n",
+				info->name, strerror(errno));
 		return 0;
 	}
 
@@ -352,9 +353,11 @@ static int create_pack(char *name, char *files[])
 				       "Overwriting `%s' as requested.\n",
 					name);
 		}
+
 		out = fopen(name, "w");
 		if (!out) {
-			perror("fopen()");
+			fprintf(stderr, "E: Trying to fopen() `%s': %s.\n",
+					name, strerror(errno));
 			return 0;
 		}
 
@@ -518,7 +521,7 @@ main (int argc, char *argv[])
 	if (argv[optind] != NULL) {
 		if (create) {
 			ret = create_pack(file, argv + optind);
-			if (!ret) fprintf(stderr, "Can't create pack file\n");
+			if (!ret) fprintf(stderr, "Can't create pack file.\n");
 		}
 
 		if (list || extract)
