@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.29 2003/12/02 19:58:46 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.30 2003/12/02 20:58:30 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -132,8 +132,8 @@ int makepath(const char *path)
 int extract_file(FILE *f, packedfile_t *info)
 {
 	FILE *out;
-	char buf[BUFSIZ];
-	int rest = 0, count = BUFSIZ;
+	char buf[BUFSIZ * 2];
+	int rest = 0, count = BUFSIZ * 2;
 
 	if (!makepath(info->name))
 		return 0;
@@ -148,14 +148,14 @@ int extract_file(FILE *f, packedfile_t *info)
 	fseek(f, endian_little_to_host(info->filepos), SEEK_SET);
 
 	rest = endian_little_to_host(info->filelen);
-	if (rest < BUFSIZ) count = rest;
+	if (rest < BUFSIZ * 2) count = rest;
 
 	while (fread(buf, count, 1, f)) {
 		if (!fwrite(buf, count, 1, out))
 			break;
 
 		rest -= count;
-		if (rest < BUFSIZ) count = rest;
+		if (rest < BUFSIZ * 2) count = rest;
 	}
 
 	if (rest) {
