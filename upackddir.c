@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.39 2004/01/13 16:50:23 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.40 2005/01/13 23:26:43 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -149,11 +149,13 @@ pack_t *packfile_open(char *name)
 		return NULL;
 	}
 
-	if (stat(name, &sbuf) == -1) {
-		LOGF("Can't stat() %s.\n", name);
-		return NULL;
+	if (pack->handle != stdin) {
+		if (stat(name, &sbuf) == -1) {
+			LOGF("Can't stat() `%s'.\n", name);
+			return NULL;
+		}
+		pack->length = sbuf.st_size;
 	}
-	pack->length = sbuf.st_size;
 
 	fread(&pack->header, 1, sizeof(pack->header), pack->handle);
 
@@ -162,8 +164,9 @@ pack_t *packfile_open(char *name)
 		return NULL;
 	}
 
-	if ((endian_little_to_host(pack->header.dirlen) +
-	     endian_little_to_host(pack->header.dirofs)) > pack->length) {
+	if ((pack->handle != stdin)
+	     && (endian_little_to_host(pack->header.dirlen) +
+	         endian_little_to_host(pack->header.dirofs)) > pack->length) {
 		LOGF("Packddir file `%s' seems corrupted: header indicates "
 		     "impossible values.\n", name);
 		return NULL;
