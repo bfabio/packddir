@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.18 2003/09/26 12:54:00 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.19 2003/11/11 19:42:29 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -221,6 +221,13 @@ int extract_pack(char *packfile, int mode)
 
 ino_t finode; /* Inode of the output file */
 dev_t fdev;   /* Device of the output file */
+
+/* Appends the file @name to the previosly opened packddir file @f
+ * @name: name of the file to be added, absolute or relative
+ * @f: the packddir file
+ *
+ * returns: 0 on failure,
+ *	    1 on success */
 static int append_file(FILE *f, char *name)
 {
 	FILE *src;
@@ -257,6 +264,12 @@ static int append_file(FILE *f, char *name)
 
 list_t packedfiles;
 
+/* Adds recursively a directory to a packddir file
+ * @f: the packddir file
+ * @name: the directory name
+ *
+ * returns: 0 on failure,
+ *	    1 on success. */
 static int traverse_dir(FILE *f, char *name)
 {
 	DIR *dir;
@@ -322,7 +335,7 @@ static int traverse_dir(FILE *f, char *name)
 
 /* Creates a PackdDir file with given files in it
  * @name: PackdDir file name
- * @files: name of files or directories to add
+ * @files: name of files and/or directories to add
  *
  * returns: 1 on success
  *          0 on failure */
