@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.15 2003/09/24 12:53:12 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.16 2003/09/25 23:06:17 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -318,6 +318,12 @@ static int traverse_dir(FILE *f, char *name)
 	return 1;
 }
 
+/* Creates a PackdDir file with given files in it
+ * @name: PackdDir file name
+ * @files: name of files or directories to add
+ *
+ * returns: 1 on success
+ *          0 on failure */
 static int create_pack(char *name, char *files[])
 {
 	int i = 0;
@@ -329,15 +335,28 @@ static int create_pack(char *name, char *files[])
 	packedfile_t *f;
 
 	if (!name) out = stdout;
-	else out = fopen(name, "w");
-
-	if (!out) {
-		perror("fopen()");
-		return 0;
-	}
-
-	if (out != stdout) {
+	else {
 		int r;
+
+		if (access(name, R_OK) == 0) {
+			int c;
+
+			fprintf(stderr, "`%s' exists. Overwrite (N/y)? ",
+					name);
+			c = getchar();
+			if (c != 'y') {
+				fprintf(stderr, "OK, exiting.\n");
+				exit(EXIT_FAILURE);
+
+			} else fprintf( stderr,
+				       "Overwriting `%s' as requested.\n",
+					name);
+		}
+		out = fopen(name, "w");
+		if (!out) {
+			perror("fopen()");
+			return 0;
+		}
 
 		r = stat(name, &buf);
 		if (r == -1) {
@@ -347,6 +366,7 @@ static int create_pack(char *name, char *files[])
 			fdev = buf.st_dev;
 			finode = buf.st_ino;
 		}
+
 	}
 
 	packedfiles = list_new();
