@@ -13,7 +13,7 @@ upackddir.o: upackddir.c
 	$(CC) $(CCFLAGS) -c -o $@ $<
 
 clean:
-	rm -f upackddir $(OBJS) tags ChangeLog*
+	rm -f upackddir $(OBJS) tags
 
 install:
 	install -m 755 upackddir $(DESTDIR)/usr/bin/upackddir
