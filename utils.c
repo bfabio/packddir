@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.2 2003/09/24 12:50:56 fabiob Exp $ */
+/* $Id: utils.c,v 1.3 2003/12/02 20:57:23 fabiob Exp $ */
 #include "utils.h"
 
 /* Endianess
@@ -13,12 +13,12 @@ static int is_little()
 	return (*(unsigned char *) &little);
 }
 
-unsigned endian_big_to_host(unsigned n)
+unsigned inline endian_big_to_host(unsigned n)
 {
 	return is_little() ? SWAP(n) : n;
 }
 
-unsigned endian_little_to_host(unsigned n)
+unsigned inline endian_little_to_host(unsigned n)
 {
 	return is_little() ? n : SWAP(n);
 }
