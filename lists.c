@@ -1,8 +1,6 @@
 /*  upackddir - extracts files from PackdDir archives
 
- *  Copyright (C) 1997-2001 Id Software, Inc.
- *  Copyright (C) 2002 The Quakeforge Project.
- *  Copyright (C) 2003 Fabio Bonelli <fabiobonelli@libero.it>
+ *  Copyright (C) 2003-2004 Fabio Bonelli <fabiobonelli@libero.it>
 
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/* $Id: lists.c,v 1.4 2003/12/02 23:06:11 fabiob Exp $ */
+/* $Id: lists.c,v 1.5 2004/01/13 16:50:23 fabiob Exp $ */
 
 /* lists.c - Lists handling */
 

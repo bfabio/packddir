@@ -1,5 +1,5 @@
 /*  upackddir - extracts files from PackdDir archives
- *  Copyright (C) <2003>  Fabio Bonelli <fabiobonelli@libero.it>
+ *  Copyright (C) 2003-2004  Fabio Bonelli <fabiobonelli@libero.it>
 
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA */
 
-/*  $Id: log.h,v 1.3 2003/12/02 19:54:44 fabiob Exp $ */
+/*  $Id: log.h,v 1.4 2004/01/13 16:50:23 fabiob Exp $ */
 
 #ifndef _LOG_H
 #define _LOG_H
