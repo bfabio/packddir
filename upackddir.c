@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 
-/*  $Id: upackddir.c,v 1.17 2003/09/26 12:48:15 fabiob Exp $ */
+/*  $Id: upackddir.c,v 1.18 2003/09/26 12:54:00 fabiob Exp $ */
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -272,7 +272,8 @@ static int traverse_dir(FILE *f, char *name)
 
 	dir = opendir(name);
 	if (!dir) {
-		perror("opendir()");
+		fprintf(stderr, "E: Trying to opendir() `%s': %s.\n",
+				name, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
@@ -281,7 +282,7 @@ static int traverse_dir(FILE *f, char *name)
 			continue;
 
 		if ((len + strlen(d->d_name)) >= 56) {
-			fprintf(stderr, "File name too long: `%s/%s'",
+			fprintf(stderr, "File name too long: `%s/%s'\n",
 					name, d->d_name);
 			exit(EXIT_FAILURE);
 		}
