@@ -257,7 +257,7 @@ int packfile_extract(char *packfile, int mode)
 	}
 
 	/* Let's jump to the beginning of our sweet data */
-	(char *) mapped += n;
+	mapped = (packedfile_t *) ((char *) mapped + n);
 
 	for (i = 0; i < pack->numfiles; i++) {
 		fprintf(stderr, "%s\n", mapped->name);
@@ -305,7 +305,7 @@ int packfile_extract_filename(char *packfile, char *name)
 	}
 
 	/* Let's jump to the beginning of our sweet data */
-	(char *) mapped += n;
+	mapped = (packedfile_t *) ((char *) mapped) + n;
 
 	for (i = 0; i < pack->numfiles; i++) {
 		if (strcmp(name, mapped->name) == 0) {
